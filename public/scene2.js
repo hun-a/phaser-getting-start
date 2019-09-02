@@ -40,9 +40,35 @@ class Scene2 extends Phaser.Scene {
     this.ship2.setInteractive();
     this.ship3.setInteractive();
 
+    this.enemies = this.physics.add.group();
+    this.enemies.add(this.ship1);
+    this.enemies.add(this.ship2);
+    this.enemies.add(this.ship3);
+
     this.input.on('gameobjectdown', this.destroyShip, this);
 
     this.add.text(20, 20, 'Playing game', { font: '25px Arial', fill: 'yellow' });
+
+    this.physics.add.collider(this.projectiles, this.powerUps, function(projectiles, powerUp) { projectiles.destroy(); });
+
+    this.physics.add.overlap(this.player, this.powerUps, this.pickPowerUp, null, this);
+    this.physics.add.overlap(this.player, this.enemies, this.hurtPlayer, null, this);
+    this.physics.add.overlap(this.projectiles, this.enemies, this.hitEnemy, null, this);
+  }
+
+  hitEnemy(projectile, enemy) {
+    projectile.destroy();
+    this.resetShipPos(enemy);
+  }
+
+  hurtPlayer(player, enemy) {
+    this.resetShipPos(enemy);
+    player.x = config.width / 2 - 8;
+    player.y = config.height - 64;
+  }
+
+  pickPowerUp(player, powerUp) {
+    powerUp.disableBody(true, true);
   }
 
   destroyShip(pointer, gameObject) {
@@ -74,6 +100,8 @@ class Scene2 extends Phaser.Scene {
   }
 
   movePlayerManager() {
+    this.player.setVelocity(0);
+
     if (this.cursorKeys.left.isDown) {
       this.player.setVelocityX(-gameSettings.playerSpeed);
     } else if (this.cursorKeys.right.isDown) {
